@@ -88,4 +88,32 @@ describe('Auth Service', () => {
     expect(refreshResponse.status).toBe(401);
     expect(refreshResponse.body.message).toContain('jwt must be provided');
   });
+
+  test('should reject if refresh token does not match user', async () => {
+    //?Given: A registered user and a mismatched refresh token
+    const registerResponse = await controller.register({
+      email: 'fahad@gmail.com',
+      password: '123123',
+    });
+
+    const registerResponse2 = await controller.register({
+      email: 'fahad2@gmail.com',
+      password: '123123',
+    });
+
+    const mismatchedRefreshToken = registerResponse2.refreshToken;
+
+    //?When: Making a request to refresh endpoint with a mismatched refresh token
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/users/refresh')
+      .set('Authorization', `Bearer ${registerResponse.accessToken}`)
+
+      .send({ refreshToken: mismatchedRefreshToken });
+
+    //?Then: The response should indicate a mismatched token
+    expect(refreshResponse.status).toBe(401);
+    expect(refreshResponse.body.message).toContain(
+      "You Don't Own The Refresh Token",
+    );
+  });
 });
