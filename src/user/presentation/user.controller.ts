@@ -1,15 +1,16 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { CreateUserRequest } from 'src/user/presentation/requests/create_user.request';
-import { UserService } from 'src/user/domain/user.service';
-import { Public, Refresh } from '../../decorators/public.decorator';
+
 import { AuthService } from '../domain/services/auth.service';
 import { TokenResponse } from '../domain/services/token.service';
 import { JwtRefreshGuard } from './guards/jwt.guard';
 import { SameUserGuard } from './guards/same_user.guard';
+import { UserService } from '../domain/services/user.service';
+import { Public, Refresh } from 'src/app/decorators/public.decorator';
 
-@Controller('auth')
-export class AuthController {
+@Controller('users')
+export class UserController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
@@ -32,15 +33,6 @@ export class AuthController {
     return await this.authService.signInWithEmail(email, password);
   }
 
-  @Public()
-  @Post('anonymous-sign-in')
-  async anonymousSignIn(): Promise<TokenResponse> {
-    const user = await this.userService.create({
-      isAnonymous: true,
-    });
-    return await this.authService.createTokenForAnon(user);
-  }
-
   @Refresh()
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
@@ -59,6 +51,6 @@ export class AuthController {
   @UseGuards(SameUserGuard)
   @Post('secure')
   async secure() {
-    return 'SUCCESS';
+    return { status: 'SUCCESS' };
   }
 }
