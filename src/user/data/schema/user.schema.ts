@@ -1,7 +1,6 @@
 import { EntitySchema } from 'typeorm';
 import { MONGO } from '../../../app/helpers/db_type';
 import { User } from '../../domain/entities/user.entity';
-import { ObjectId } from 'mongodb';
 
 export const UserSchema = new EntitySchema<User>({
   name: 'User',
