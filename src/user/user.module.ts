@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 
-import { JwtStrategy } from './presentation/guards/jwt.guard';
 import { AuthService } from './domain/services/auth.service';
 import { TokensService } from './domain/services/token.service';
 import { UserService } from './domain/services/user.service';

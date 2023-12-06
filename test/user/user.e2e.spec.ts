@@ -69,4 +69,23 @@ describe('Auth Service', () => {
     expect(refreshResponse.status).toBe(401);
     expect(refreshResponse.body.message).toContain('jwt must be provided');
   });
+
+  test('should reject if no refresh token is provided', async () => {
+    //?Given: A registered user without providing a refresh token
+    const registerResponse = await controller.register({
+      email: 'fahad@gmail.com',
+      password: '123123',
+    });
+
+    //?When: Making a request to refresh endpoint without a refresh token
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/users/refresh')
+
+      .set('Authorization', `Bearer ${registerResponse.accessToken}`)
+      .send({});
+
+    //?Then: The response should indicate the absence of a refresh token
+    expect(refreshResponse.status).toBe(401);
+    expect(refreshResponse.body.message).toContain('jwt must be provided');
+  });
 });
