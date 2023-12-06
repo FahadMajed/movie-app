@@ -7,7 +7,7 @@ import { timestamp } from 'src/app/helpers/timestamp';
 export class TokensService {
   constructor(private readonly jwtService: JwtService) {}
 
-  sign(userPayload: { email: string; userID: number }): TokenResponse {
+  sign(userPayload: { email: string; userID: string }): TokenResponse {
     const payload = { ...userPayload, timestamp: timestamp() };
     return {
       accessToken: this.jwtService.sign(payload),
@@ -23,5 +23,5 @@ export class TokensService {
 export type TokenResponse = {
   accessToken: string;
   refreshToken: string;
-  userID: number;
+  userID: string;
 };

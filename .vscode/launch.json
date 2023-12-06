@@ -1,0 +1,79 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Jest All",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+            "args": [
+                "--runInBand"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "name": "Jest Current File",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+            "args": [
+                "${fileBasenameNoExtension}",
+                "--runInBand"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+      
+        {
+            "name": "Run Script: start:prod",
+            "type": "node",
+            "console": "integratedTerminal",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.ts",
+            "args": ["--env=prod"],
+            "env": {
+            "NODE_ENV": "prod"
+            }
+        },
+        {
+            "name": "Run Script: start:staging",
+            "type": "node",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "program": "${workspaceFolder}/src/main.ts",
+            "args": ["--env=staging"],
+            "env": {
+            "NODE_ENV": "staging"
+            },
+            "preLaunchTask": "build" 
+        },
+        {
+            "name": "Run Script: start:dev",
+            "type": "node",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "program": "${workspaceFolder}/src/main.ts",
+            "args": ["--env=dev"],
+       
+            "env": {
+            "NODE_ENV": "dev"
+            },
+            "preLaunchTask": "build" 
+        },
+        {
+            "name": "Run Script: start:test",
+            "type": "node",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "program": "${workspaceFolder}/src/main.ts",
+            "args": ["--env=dev", "--debug", "--watch"],
+            "sourceMaps": true,
+            "env": {
+            "NODE_ENV": "testing"
+            },
+            "preLaunchTask": "build" 
+        },
+    ]
+}

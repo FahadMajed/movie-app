@@ -3,12 +3,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AllExceptionsFilter } from './app/filters/exceptions.filter';
-import { JwtAuthGuard } from './user/presentation/guards/jwt.guard';
-import { UserModule } from './user/user.module';
+import { AllExceptionsFilter } from './filters/exceptions.filter';
+import { JwtAuthGuard } from '../user/presentation/guards/jwt.guard';
+import { UserModule } from '../user/user.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true, // isGlobal applies to CacheModule, not the store config
+      ttl: 0, // 3 years
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),

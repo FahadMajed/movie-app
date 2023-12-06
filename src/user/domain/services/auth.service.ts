@@ -43,7 +43,7 @@ export class AuthService {
 
   async generateTokenByRefresh(
     refreshToken: string,
-    userID: number,
+    userID: string,
   ): Promise<string> {
     const user = await this.userService.findById(userID);
 

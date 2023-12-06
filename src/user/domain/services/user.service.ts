@@ -28,11 +28,11 @@ export class UserService {
     return this.userRepository.findUserByEmail(email);
   }
 
-  async findById(id: number): Promise<User> {
+  async findById(id: string): Promise<User> {
     return this.userRepository.findUserById(id);
   }
 
-  async addRefreshToken(refreshTokenHashed: string, id: number) {
+  async addRefreshToken(refreshTokenHashed: string, id: string) {
     this.userRepository.update(id, {
       refreshTokenHashed: refreshTokenHashed,
     });

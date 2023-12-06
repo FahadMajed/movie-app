@@ -8,18 +8,16 @@ import {
 } from '@nestjs/common';
 
 import { Request, Response } from 'express';
-import { LogsService } from '../logs/logs.service';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly logger: LogsService) {}
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
     if (exception instanceof UnauthorizedException == false)
-      this.logger.error(exception.message, exception.stack);
+      console.error(exception.message, exception.stack);
     if (response.headersSent) {
       return;
     }

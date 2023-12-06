@@ -17,7 +17,7 @@ export class UserRepository {
   ) {}
 
   @Cacheable({ keyPrefix: 'user' })
-  async findUserById(id: number): Promise<User | undefined> {
+  async findUserById(id: string): Promise<User | undefined> {
     const user = await this.repo.findOneBy({ id });
 
     return user;
@@ -31,14 +31,14 @@ export class UserRepository {
   }
 
   async save(user: User): Promise<User> {
-    return this.repo.save(user);
+    return await this.repo.save(user);
   }
 
   async remove(user: User): Promise<User> {
     return this.repo.remove(user);
   }
 
-  async update(id: number, user: Partial<User>) {
+  async update(id: string, user: Partial<User>) {
     this.repo.update(id, user);
   }
 }

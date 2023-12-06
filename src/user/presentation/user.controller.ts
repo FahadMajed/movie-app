@@ -39,7 +39,7 @@ export class UserController {
   ): Promise<{ accessToken: string }> {
     const accessToken = await this.authService.generateTokenByRefresh(
       body.refreshToken,
-      Number(request['user']['userID']),
+      request['user']['userID'],
     );
 
     return { accessToken: accessToken };

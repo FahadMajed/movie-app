@@ -1,6 +1,7 @@
 import { EntitySchema } from 'typeorm';
-import { POSTGRES } from '../../../app/helpers/db_type';
+import { MONGO } from '../../../app/helpers/db_type';
 import { User } from '../../domain/entities/user.entity';
+import { ObjectId } from 'mongodb';
 
 export const UserSchema = new EntitySchema<User>({
   name: 'User',
@@ -8,9 +9,9 @@ export const UserSchema = new EntitySchema<User>({
 
   columns: {
     id: {
-      type: 'int',
+      type: String,
+      objectId: true,
       primary: true,
-      generated: true,
     },
     email: {
       type: String,
@@ -34,12 +35,12 @@ export const UserSchema = new EntitySchema<User>({
       nullable: true,
     },
     createdAt: {
-      type: !POSTGRES ? 'datetime' : Date,
+      type: !MONGO ? 'datetime' : Date,
       createDate: true,
     },
 
     updatedAt: {
-      type: !POSTGRES ? 'datetime' : Date,
+      type: !MONGO ? 'datetime' : Date,
       updateDate: true,
     },
   },
