@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common/exceptions/unauthorized.exception';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/domain/user.service';
+import { UserService } from 'src/user/domain/services/user.service';
 
 /**A GUARD TO ENSURE THE REQUEST USER OWNS THE RESOURCE, E.G. ThE USER ID
  * IN THE TOKEN EQUALS TO THE USER ID IN THE REQUEST**/

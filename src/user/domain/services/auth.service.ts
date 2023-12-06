@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -56,15 +55,6 @@ export class AuthService {
 
     return this.tokensService.sign({ email: user.email, userID: user.id })
       .accessToken;
-  }
-
-  async signInWithProvider(email: string): Promise<TokenResponse> {
-    const user = await this.userService.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('Email Not Found');
-    }
-
-    return await this.createToken(user);
   }
 
   private async createToken(user: User): Promise<TokenResponse> {

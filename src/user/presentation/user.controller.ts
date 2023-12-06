@@ -6,15 +6,12 @@ import { AuthService } from '../domain/services/auth.service';
 import { TokenResponse } from '../domain/services/token.service';
 import { JwtRefreshGuard } from './guards/jwt.guard';
 import { SameUserGuard } from './guards/same_user.guard';
-import { UserService } from '../domain/services/user.service';
+
 import { Public, Refresh } from 'src/app/decorators/public.decorator';
 
 @Controller('users')
 export class UserController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('register')
