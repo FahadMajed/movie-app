@@ -1,10 +1,10 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
-import { CreateUserRequest } from 'src/app/auth/controller/requests/create_user.request';
+import { CreateUserRequest } from 'src/user/presentation/requests/create_user.request';
 import { UserService } from 'src/user/domain/user.service';
 import { Public, Refresh } from '../../decorators/public.decorator';
-import { AuthService } from '../domain/auth.service';
-import { TokenResponse } from '../domain/token.service';
+import { AuthService } from '../domain/services/auth.service';
+import { TokenResponse } from '../domain/services/token.service';
 import { JwtRefreshGuard } from './guards/jwt.guard';
 import { SameUserGuard } from './guards/same_user.guard';
 

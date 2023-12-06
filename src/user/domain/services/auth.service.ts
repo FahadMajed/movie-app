@@ -4,12 +4,13 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserService } from 'src/user/domain/user.service';
 
 import * as bcrypt from 'bcryptjs';
-import { CreateUserRequest } from 'src/app/auth/controller/requests/create_user.request';
-import { User } from 'src/user/domain/entities/user.entity';
+import { CreateUserRequest } from 'src/user/presentation/requests/create_user.request';
+
 import { TokenResponse, TokensService } from './token.service';
+import { UserService } from './user.service';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -41,29 +42,6 @@ export class AuthService {
     } else return await this.createToken(user);
   }
 
-  async createTokenForAnon(user: User): Promise<TokenResponse> {
-    const response = await this.tokensService.signForAnon(user.id);
-    const refreshTokenHashed = await this.hash(response.refreshToken);
-
-    this.userService.addRefreshToken(refreshTokenHashed, user.id);
-
-    return response;
-  }
-
-  async validateAppleToken(
-    idToken: string,
-    userAppleId: string,
-  ): Promise<boolean> {
-    return this.tokensService.validateAppleToken(idToken, userAppleId);
-  }
-
-  async validateGoogleToken(
-    idToken: string,
-    userEmail: string,
-  ): Promise<boolean> {
-    return this.tokensService.validateGoogleToken(idToken, userEmail);
-  }
-
   async generateTokenByRefresh(
     refreshToken: string,
     userID: number,
@@ -87,31 +65,6 @@ export class AuthService {
     }
 
     return await this.createToken(user);
-  }
-
-  async registerWithProvider(
-    email: string,
-    firstName: string,
-    lastName: string,
-  ): Promise<TokenResponse> {
-    const user = await this.userService.create({
-      firstName: firstName ?? '',
-      lastName: lastName ?? '',
-      email: email,
-    });
-
-    return await this.createToken(user);
-  }
-
-  async linkAnonymousAccount(email: string, userID: number): Promise<boolean> {
-    const user = await this.userService.findById(userID);
-
-    user.email = email;
-    user.isAnonymous = false;
-
-    await this.userService.updateUser(user);
-
-    return true;
   }
 
   private async createToken(user: User): Promise<TokenResponse> {
