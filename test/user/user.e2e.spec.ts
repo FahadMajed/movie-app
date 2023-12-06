@@ -116,4 +116,27 @@ describe('Auth Service', () => {
       "You Don't Own The Refresh Token",
     );
   });
+
+  test('should reject if refresh token is expired', async () => {
+    //? Given: A registered user with an expired refresh token
+    Date.now = jest.fn(() => new Date('2023-11-17T12:16:00Z').getTime());
+
+    const registerResponse = await controller.register({
+      email: 'fahad@gmail.com',
+      password: '123123',
+    });
+
+    Date.now = jest.fn(() => new Date('2223-11-17T12:16:00Z').getTime());
+
+    //? When: Making a request to refresh endpoint with an expired refresh toke
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/users/refresh')
+      .set('Authorization', `Bearer ${registerResponse.accessToken}`)
+
+      .send({ refreshToken: registerResponse.refreshToken });
+
+    //? Then: The response should indicate token expiration
+    expect(refreshResponse.status).toBe(401);
+    expect(refreshResponse.body.message).toContain('jwt expired');
+  });
 });
