@@ -30,3 +30,5 @@ Other related topics
 
 - [How Data Integrity is handled](/docs/DATA_INTEGRITY.MD.MD)
 - [Brief About Nest JS](/docs/NESTJS.MD)
+
+I am happy to discuss any design or architectural decision made in the app, such as the testing strategy, why I introduced repositories, splitting between entities and schemas, the folder structure, and the choice of TypeORM to name few.
