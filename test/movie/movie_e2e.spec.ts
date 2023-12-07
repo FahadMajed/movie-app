@@ -1,7 +1,8 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { timestamp } from 'src/app/helpers/timestamp';
+import { MovieRepository } from 'src/movie/data/repository/movie.repository';
 import { MovieModule } from 'src/movie/movie.module';
 import { MoviesController } from 'src/movie/presentation/movie.controller';
 import * as request from 'supertest';
@@ -14,6 +15,8 @@ import { movieFactory } from './movie.factory';
 describe('MoviesController E2E', () => {
   let app: INestApplication;
   let controller: MoviesController;
+  let repository: MovieRepository;
+
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [ormModule, configModule, cacheModule, MovieModule],
@@ -21,7 +24,16 @@ describe('MoviesController E2E', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+
     controller = app.get(MoviesController);
+    repository = app.get(MovieRepository);
   });
 
   afterEach(async () => {
@@ -140,6 +152,47 @@ describe('MoviesController E2E', () => {
       expect(reserveResponse.body.message).toContain(
         `Time slot with ID ${invalidTimeSlotId} not found in movie ${movie.title}.`,
       );
+    });
+
+    test('should successfully reserve time slots with valid sub-capacity requests', async () => {
+      // Arrange: Create a valid movie to have a valid movie ID
+      const movie = movieFactory();
+      const createMovieResponse = await controller.createMovie(movie);
+
+      // Get the time slot ID and capacity of the first time slot
+      const timeSlotId = createMovieResponse.timeSlotsIds[0];
+      const timeSlotCapacity = movie.timeSlots[0].capacity;
+
+      // Divide the capacity into multiple sub-capacity requests
+      const subCapacityRequests = [
+        { numberOfPeople: Math.floor(timeSlotCapacity / 2) },
+        { numberOfPeople: Math.ceil(timeSlotCapacity / 2) },
+      ];
+
+      let totalReservedSeats = 0;
+
+      // Act: Attempt to reserve time slots with valid sub-capacity requests
+      for (const requestParams of subCapacityRequests) {
+        const reserveResponse = await request(app.getHttpServer())
+          .post(
+            `/movies/${createMovieResponse.movieId}/timeSlots/${timeSlotId}/reserve`,
+          )
+          .send(requestParams);
+
+        // Assert: Check that each reservation attempt succeeds
+        expect(reserveResponse.status).toBe(201);
+        totalReservedSeats += requestParams.numberOfPeople;
+      }
+
+      //  Verify that the total bookedCount matches the sum of sub-capacity reservations
+      const movieAfterReservations = await repository.findMovieById(
+        createMovieResponse.movieId,
+      );
+      const reservedTimeSlot = movieAfterReservations.timeSlots.find(
+        (slot) => slot.id === timeSlotId,
+      );
+
+      expect(reservedTimeSlot.bookedCount).toBe(totalReservedSeats);
     });
   });
 });
