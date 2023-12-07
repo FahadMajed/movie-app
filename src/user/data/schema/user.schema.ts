@@ -1,5 +1,4 @@
 import { EntitySchema } from 'typeorm';
-import { MONGO } from '../../../app/helpers/db_type';
 import { User } from '../../domain/entities/user.entity';
 
 export const UserSchema = new EntitySchema<User>({
@@ -7,10 +6,11 @@ export const UserSchema = new EntitySchema<User>({
   target: User,
 
   columns: {
-    id: {
+    _id: {
       type: String,
       objectId: true,
       primary: true,
+      name: 'id',
     },
     email: {
       type: String,
@@ -34,12 +34,12 @@ export const UserSchema = new EntitySchema<User>({
       nullable: true,
     },
     createdAt: {
-      type: !MONGO ? 'datetime' : Date,
+      type: Date,
       createDate: true,
     },
 
     updatedAt: {
-      type: !MONGO ? 'datetime' : Date,
+      type: Date,
       updateDate: true,
     },
   },

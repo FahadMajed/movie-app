@@ -5,6 +5,7 @@ import { User } from '../domain/entities/user.entity';
 import { CACHE_MANAGER, CacheModule } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ObjectId } from 'mongodb';
 import { Cacheable } from 'src/app/decorators/cacheable.decorator';
 
 @Injectable()
@@ -18,7 +19,11 @@ export class UserRepository {
 
   @Cacheable({ keyPrefix: 'user' })
   async findUserById(id: string): Promise<User | undefined> {
-    const user = await this.repo.findOneBy({ id });
+    const user = await this.repo.findOneBy({ _id: new ObjectId(id) });
+
+    const users = await this.repo.find({});
+
+    users;
 
     return user;
   }
@@ -39,6 +44,7 @@ export class UserRepository {
   }
 
   async update(id: string, user: Partial<User>) {
-    this.repo.update(id, user);
+    const objectId = new ObjectId(id); // Convert string ID to ObjectId
+    await this.repo.update({ _id: objectId }, user);
   }
 }

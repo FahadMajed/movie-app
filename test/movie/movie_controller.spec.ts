@@ -12,41 +12,6 @@ import { ormModule } from 'test/configs/test.configs';
 describe('MoviesController', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [ormModule, MovieModule],
-    }).compile();
-
-    app = module.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-        exceptionFactory: (validationErrors) => {
-          function getConstraints(error) {
-            if (error.children && error.children.length > 0) {
-              return error.children.flatMap((childError) =>
-                getConstraints(childError),
-              );
-            }
-            return Object.values(error.constraints);
-          }
-
-          const errorMessages = validationErrors
-            .flatMap((error) => getConstraints(error))
-            .flat();
-
-          return new BadRequestException({
-            message:
-              errorMessages.length > 0 ? errorMessages : ['Validation failed'],
-          });
-        },
-      }),
-    );
-    await app.init();
-  });
-
   describe('Movie', () => {
     it('should throw BadRequestException for invalid title (empty)', async () => {
       const movieRequest = {
@@ -204,6 +169,41 @@ describe('MoviesController', () => {
         'capacity must not be less than 1',
       );
     });
+  });
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [ormModule, MovieModule],
+    }).compile();
+
+    app = module.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+        exceptionFactory: (validationErrors) => {
+          function getConstraints(error) {
+            if (error.children && error.children.length > 0) {
+              return error.children.flatMap((childError) =>
+                getConstraints(childError),
+              );
+            }
+            return Object.values(error.constraints);
+          }
+
+          const errorMessages = validationErrors
+            .flatMap((error) => getConstraints(error))
+            .flat();
+
+          return new BadRequestException({
+            message:
+              errorMessages.length > 0 ? errorMessages : ['Validation failed'],
+          });
+        },
+      }),
+    );
+    await app.init();
   });
 
   afterAll(async () => {

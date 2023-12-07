@@ -7,31 +7,15 @@ import { UserController } from 'src/user/presentation/user.controller';
 import { UserModule } from 'src/user/user.module';
 
 import * as request from 'supertest';
-import {
+import dropDatabase, {
   cacheModule,
   configModule,
   ormModule,
 } from 'test/configs/test.configs';
 
-describe('Auth Service', () => {
+describe('User E2E', () => {
   let controller: UserController;
   let app: INestApplication;
-
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ormModule, configModule, cacheModule, UserModule],
-      providers: [
-        {
-          provide: APP_GUARD,
-          useClass: JwtAuthGuard,
-        },
-      ],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-    controller = app.get(UserController);
-  });
 
   describe('/refresh (POST)', () => {
     test('should generate new access token with valid tokens', async () => {
@@ -151,7 +135,7 @@ describe('Auth Service', () => {
       });
 
       expect(response.accessToken).toBeDefined();
-      expect(response.userID).toBe(1);
+      expect(response.userID).toBeDefined();
     });
 
     test('should not create new user if email exists', async () => {
@@ -204,5 +188,25 @@ describe('Auth Service', () => {
         'Email Not Found',
       );
     });
+  });
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [ormModule, configModule, cacheModule, UserModule],
+      providers: [
+        {
+          provide: APP_GUARD,
+          useClass: JwtAuthGuard,
+        },
+      ],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+    controller = app.get(UserController);
+  });
+
+  afterEach(async () => {
+    await dropDatabase(); // This will drop the database after each test
   });
 });

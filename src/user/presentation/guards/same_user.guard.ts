@@ -24,7 +24,7 @@ export class SameUserGuard implements CanActivate {
 
       const actualUserId = request.params?.id ?? request.body.userID;
 
-      if (tokenUser.id !== actualUserId) {
+      if (tokenUser._id !== actualUserId) {
         throw new UnauthorizedException(
           'You cannot access someone else’s data',
         );

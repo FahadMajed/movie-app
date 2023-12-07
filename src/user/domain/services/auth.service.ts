@@ -7,9 +7,9 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { CreateUserRequest } from 'src/user/presentation/requests/create_user.request';
 
+import { User } from '../entities/user.entity';
 import { TokenResponse, TokensService } from './token.service';
 import { UserService } from './user.service';
-import { User } from '../entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -53,17 +53,17 @@ export class AuthService {
       throw new UnauthorizedException("You Don't Own The Refresh Token");
     }
 
-    return this.tokensService.sign({ email: user.email, userID: user.id })
+    return this.tokensService.sign({ email: user.email, userID: user._id })
       .accessToken;
   }
 
   private async createToken(user: User): Promise<TokenResponse> {
     const response = this.tokensService.sign({
       email: user.email,
-      userID: user.id,
+      userID: user._id,
     });
 
-    this.userService.addRefreshToken(response.refreshToken, user.id);
+    await this.userService.addRefreshToken(response.refreshToken, user._id);
 
     return response;
   }
