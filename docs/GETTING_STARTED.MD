@@ -14,7 +14,7 @@ Before getting started, ensure you have the following prerequisites installed on
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/FahadMajed/movie-app
 ```
 
 Navigate to the project directory:
