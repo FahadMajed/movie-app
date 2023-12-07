@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { timestamp } from 'src/app/helpers/timestamp';
 import { MovieRepository } from 'src/movie/data/repository/movie.repository';
+import { MovieService } from 'src/movie/domain/services/movie.service';
 import { MovieModule } from 'src/movie/movie.module';
 import { MoviesController } from 'src/movie/presentation/movie.controller';
 import * as request from 'supertest';
@@ -12,10 +13,11 @@ import dropDatabase, {
   ormModule,
 } from 'test/configs/test.configs';
 import { movieFactory } from './movie.factory';
-describe('MoviesController E2E', () => {
+describe('Movies E2E', () => {
   let app: INestApplication;
   let controller: MoviesController;
   let repository: MovieRepository;
+  let service: MovieService;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -27,6 +29,7 @@ describe('MoviesController E2E', () => {
 
     controller = app.get(MoviesController);
     repository = app.get(MovieRepository);
+    service = app.get(MovieService);
   });
 
   afterEach(async () => {
@@ -255,18 +258,19 @@ describe('MoviesController E2E', () => {
       const movie = movieFactory();
       const createMovieResponse = await controller.createMovie(movie);
       const timeSlotId = createMovieResponse.timeSlotsIds[0];
-      const capacity = movie.timeSlots[0].capacity;
-      await controller.reserveTimeSlot(
-        createMovieResponse.movieId,
+      return {
+        movieId: createMovieResponse.movieId,
         timeSlotId,
-        capacity,
-      );
-      return { movieId: createMovieResponse.movieId, timeSlotId, capacity };
+        capacity: movie.timeSlots[0].capacity,
+      };
     };
 
     test('should get remaining capacity for a fully booked time slot', async () => {
       // Arrange: Create a movie, reserve a time slot, and get its ID
-      const { movieId, timeSlotId } = await createMovieAndReserveTimeSlot();
+      const { movieId, timeSlotId, capacity } =
+        await createMovieAndReserveTimeSlot();
+
+      await controller.reserveTimeSlot(movieId, timeSlotId, capacity);
 
       // Act: Request the remaining capacity for the reserved time slot
       const response = await request(app.getHttpServer()).get(
@@ -296,6 +300,108 @@ describe('MoviesController E2E', () => {
       expect(response.body.remainingCapacity).toBe(movie.timeSlots[0].capacity);
       expect(response.body.totalBookedSeats).toBe(0);
       expect(response.body.isAvailable).toBe(true);
+    });
+
+    test('should get remaining capacity for a partially booked time slot', async () => {
+      // Arrange: Create a movie and reserve some seats in a time slot
+      const { movieId, timeSlotId, capacity } =
+        await createMovieAndReserveTimeSlot();
+
+      const numberOfBookings = 5;
+      await controller.reserveTimeSlot(movieId, timeSlotId, numberOfBookings);
+
+      // Act: Request the remaining capacity for the partially booked time slot
+      const response = await request(app.getHttpServer()).get(
+        `/movies/${movieId}/capacity/${timeSlotId}`,
+      );
+
+      // Assert: Check that the response indicates the remaining capacity and availability
+      expect(response.status).toBe(200);
+      expect(response.body.remainingCapacity).toBe(capacity - numberOfBookings); // No adjustment needed
+      expect(response.body.totalBookedSeats).toBe(numberOfBookings);
+      expect(response.body.isAvailable).toBe(true);
+    });
+  });
+
+  describe('/movies (GET)', () => {
+    test('should retrieve a list of movies with default pagination', async () => {
+      // Arrange: Insert a few movies into the database
+      for (let i = 0; i < 5; i++) {
+        await service.createMovie(movieFactory());
+      }
+
+      // Act: Make a GET request to the endpoint
+      const response = await controller.getMovies();
+
+      // Assert: Expect to receive the first page of movies
+      expect(response.movies.length).toBe(5);
+    });
+
+    test('should retrieve a list of movies with custom pagination', async () => {
+      // Arrange: Insert a number of movies into the database
+      const totalMovies = 15;
+      for (let i = 0; i < totalMovies; i++) {
+        await service.createMovie(movieFactory());
+      }
+
+      // Define custom pagination parameters
+      const customPage = 2;
+      const customLimit = 5;
+
+      // Act: Make a GET request to the endpoint with custom pagination
+      const response = await controller.getMovies(customPage, customLimit);
+
+      // Assert: Expect to receive the specified page of movies with the specified number of items
+      expect(response.movies.length).toBe(customLimit);
+
+      // Check if nextPage is correct
+      const expectedNextPage = customPage + 1;
+      expect(response.nextPage).toBe(expectedNextPage);
+    });
+
+    test('should return an empty list when the requested page is beyond total pages', async () => {
+      // Arrange: Insert a limited number of movies into the database
+      const totalMovies = 20; // Assuming this is less than the number of movies per page multiplied by total pages
+      for (let i = 0; i < totalMovies; i++) {
+        await service.createMovie(movieFactory());
+      }
+
+      // Define a page number that is beyond the total number of available pages
+      const pageBeyondTotal = Math.ceil(totalMovies / 10) + 1; // Assuming 10 movies per page
+      const customLimit = 10;
+
+      // Act: Make a GET request to the endpoint with a high page number
+      const response = await controller.getMovies(pageBeyondTotal, customLimit);
+
+      // Assert: The server should return an empty list
+      expect(response.movies).toEqual([]);
+      expect(response.nextPage).toBeNull(); // Assuming that the nextPage is null when there are no more pages
+    });
+
+    test('should return different movies for different pages', async () => {
+      // Arrange: Insert a sufficient number of movies into the database
+      const totalMovies = 25;
+      for (let i = 0; i < totalMovies; i++) {
+        await service.createMovie(movieFactory());
+      }
+
+      // Define pagination parameters
+      const limit = 10;
+
+      // Act: Make a GET request to the endpoint for the first page
+      const firstPageResponse = await controller.getMovies(1, limit);
+
+      // Act: Make another GET request to the endpoint for the second page
+      const secondPageResponse = await controller.getMovies(2, limit);
+
+      // Assert: The server should return different arrays of movies for each page
+      expect(firstPageResponse.movies).not.toEqual(secondPageResponse.movies);
+
+      // Further validation can be performed to ensure no overlap in movies
+      const firstPageIds = firstPageResponse.movies.map((movie) => movie.id);
+      const secondPageIds = secondPageResponse.movies.map((movie) => movie.id);
+      const uniqueIds = new Set([...firstPageIds, ...secondPageIds]);
+      expect(uniqueIds.size).toBe(firstPageIds.length + secondPageIds.length);
     });
   });
 });
