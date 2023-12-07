@@ -1,12 +1,13 @@
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AllExceptionsFilter } from './filters/exceptions.filter';
+import { MovieModule } from 'src/movie/movie.module';
 import { JwtAuthGuard } from '../user/presentation/guards/jwt.guard';
 import { UserModule } from '../user/user.module';
-import { CacheModule } from '@nestjs/cache-manager';
+import { AllExceptionsFilter } from './filters/exceptions.filter';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       }),
     }),
     UserModule,
+    MovieModule,
   ],
   controllers: [],
   providers: [
