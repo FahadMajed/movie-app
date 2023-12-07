@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { timestamp } from 'src/app/helpers/timestamp';
@@ -24,13 +24,6 @@ describe('MoviesController E2E', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
 
     controller = app.get(MoviesController);
     repository = app.get(MovieRepository);
@@ -254,6 +247,55 @@ describe('MoviesController E2E', () => {
       expect(failedReservation.response.body.message).toContain(
         'Insufficient capacity for the requested number of seats.',
       );
+    });
+  });
+
+  describe('/capacity (GET)', () => {
+    const createMovieAndReserveTimeSlot = async () => {
+      const movie = movieFactory();
+      const createMovieResponse = await controller.createMovie(movie);
+      const timeSlotId = createMovieResponse.timeSlotsIds[0];
+      const capacity = movie.timeSlots[0].capacity;
+      await controller.reserveTimeSlot(
+        createMovieResponse.movieId,
+        timeSlotId,
+        capacity,
+      );
+      return { movieId: createMovieResponse.movieId, timeSlotId, capacity };
+    };
+
+    test('should get remaining capacity for a fully booked time slot', async () => {
+      // Arrange: Create a movie, reserve a time slot, and get its ID
+      const { movieId, timeSlotId } = await createMovieAndReserveTimeSlot();
+
+      // Act: Request the remaining capacity for the reserved time slot
+      const response = await request(app.getHttpServer()).get(
+        `/movies/${movieId}/capacity/${timeSlotId}`,
+      );
+
+      // Assert: Check that the response contains the expected properties
+      expect(response.status).toBe(200);
+      expect(response.body.remainingCapacity).toBe(0); // All seats are booked
+      expect(response.body.totalBookedSeats).toBeGreaterThan(0);
+      expect(response.body.isAvailable).toBe(false);
+    });
+
+    test('should get remaining capacity for an empty time slot', async () => {
+      // Arrange: Create a movie with an empty time slot
+      const movie = movieFactory();
+      const createMovieResponse = await controller.createMovie(movie);
+      const timeSlotId = createMovieResponse.timeSlotsIds[0];
+
+      // Act: Request the remaining capacity for the empty time slot
+      const response = await request(app.getHttpServer()).get(
+        `/movies/${createMovieResponse.movieId}/capacity/${timeSlotId}`,
+      );
+
+      // Assert: Check that the response indicates all seats are available
+      expect(response.status).toBe(200);
+      expect(response.body.remainingCapacity).toBe(movie.timeSlots[0].capacity);
+      expect(response.body.totalBookedSeats).toBe(0);
+      expect(response.body.isAvailable).toBe(true);
     });
   });
 });

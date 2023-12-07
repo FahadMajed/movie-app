@@ -27,7 +27,7 @@ export class MoviesController {
     };
   }
 
-  @Post(':movieId/capacity/:timeSlotId')
+  @Get(':movieId/capacity/:timeSlotId')
   async getTimeSlotRemainingCapacity(
     @Param('movieId') movieId: string,
     @Param('timeSlotId', ParseIntPipe) timeSlotId: number,

@@ -44,7 +44,7 @@ export class MovieService {
     const timeSlot = await this.getTimeSlotByMovie(movieId, timeSlotId);
 
     return {
-      remainingCapacity: timeSlot.capacity,
+      remainingCapacity: timeSlot.getRemainingCapacity(),
       totalBookedSeats: timeSlot.bookedCount,
       isAvailable: timeSlot.isAvailable(),
     };

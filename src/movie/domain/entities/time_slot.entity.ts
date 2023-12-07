@@ -12,4 +12,8 @@ export class TimeSlot {
   isAvailable() {
     return this.bookedCount < this.capacity;
   }
+
+  getRemainingCapacity(): number {
+    return this.capacity - this.bookedCount;
+  }
 }
