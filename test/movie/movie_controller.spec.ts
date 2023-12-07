@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { MovieModule } from 'src/movie/movie.module';
 import * as request from 'supertest';
-import { ormModule } from 'test/configs/test.configs';
+import dropDatabase, { ormModule } from 'test/configs/test.configs';
 
 describe('MoviesController', () => {
   let app: INestApplication;
@@ -207,6 +207,8 @@ describe('MoviesController', () => {
   });
 
   afterAll(async () => {
+    await dropDatabase(); // This will drop the database after each test
+
     await app.close();
   });
 });

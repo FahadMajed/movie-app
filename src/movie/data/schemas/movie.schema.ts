@@ -1,11 +1,11 @@
 import { Movie } from 'src/movie/domain/entities/movie.entity';
 import { EntitySchema } from 'typeorm';
 
-export const MovieSchema = new EntitySchema<Movie>({
+export const MovieSchema = new EntitySchema({
   name: 'Movie',
   target: Movie,
   columns: {
-    id: {
+    _id: {
       type: String,
       objectId: true,
       primary: true,
@@ -17,6 +17,10 @@ export const MovieSchema = new EntitySchema<Movie>({
     timeSlots: {
       type: 'json',
       nullable: true,
+    },
+    version: {
+      type: Number,
+      default: 0,
     },
   },
 });

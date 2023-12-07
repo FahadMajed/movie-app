@@ -1,3 +1,5 @@
 export default async () => {
-  await (global as any).__MONGOD__.stop();
+  if (global.__MONGOD__) {
+    await global.__MONGOD__.stop();
+  }
 };

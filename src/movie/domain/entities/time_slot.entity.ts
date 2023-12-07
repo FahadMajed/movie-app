@@ -1,5 +1,5 @@
 export class TimeSlot {
-  id: string;
+  id: number;
   startTime: Date;
   endTime: Date;
   capacity: number;
@@ -7,5 +7,9 @@ export class TimeSlot {
 
   hasSufficientCapacity(numberOfPeople: number) {
     return this.bookedCount + numberOfPeople > this.capacity;
+  }
+
+  isAvailable() {
+    return this.bookedCount < this.capacity;
   }
 }
