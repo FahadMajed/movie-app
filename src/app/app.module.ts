@@ -9,12 +9,17 @@ import { JwtAuthGuard } from '../user/presentation/guards/jwt.guard';
 import { UserModule } from '../user/user.module';
 import { AllExceptionsFilter } from './filters/exceptions.filter';
 
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+
 @Module({
   imports: [
     CacheModule.register({
       isGlobal: true, // isGlobal applies to CacheModule, not the store config
       ttl: 0, // 3 years
     }),
+
     ConfigModule.forRoot({
       isGlobal: true,
     }),

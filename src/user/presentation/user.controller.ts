@@ -5,7 +5,6 @@ import { CreateUserRequest } from 'src/user/presentation/requests/create_user.re
 import { AuthService } from '../domain/services/auth.service';
 import { TokenResponse } from '../domain/services/token.service';
 import { JwtRefreshGuard } from './guards/jwt.guard';
-import { SameUserGuard } from './guards/same_user.guard';
 
 import { Public, Refresh } from 'src/app/decorators/public.decorator';
 
@@ -15,9 +14,7 @@ export class UserController {
 
   @Public()
   @Post('register')
-  async register(
-    @Body('user') request: CreateUserRequest,
-  ): Promise<TokenResponse> {
+  async register(@Body() request: CreateUserRequest): Promise<TokenResponse> {
     return await this.authService.registerWithEmail(request);
   }
 
@@ -43,11 +40,5 @@ export class UserController {
     );
 
     return { accessToken: accessToken };
-  }
-
-  @UseGuards(SameUserGuard)
-  @Post('secure')
-  async secure() {
-    return { status: 'SUCCESS' };
   }
 }

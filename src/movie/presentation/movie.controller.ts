@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -9,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { MovieService } from '../domain/services/movie.service';
 import { CreateMovieRequest } from './requests/create_movie.request';
+import { ReserveTimeSlotRequest } from './requests/reserve_timeslot.request';
 import { GetMoviesResponse } from './responses/get_movies.response';
 import { RemainingCapacityResponse } from './responses/remaining_capacity.response';
 
@@ -42,10 +44,10 @@ export class MoviesController {
   async reserveTimeSlot(
     @Param('movieId') movieId: string,
     @Param('timeSlotId', ParseIntPipe) timeSlotId: number,
-    @Body('numberOfPeople', ParseIntPipe) numberOfPeople: number,
+    @Body() request: ReserveTimeSlotRequest,
   ): Promise<{ success: boolean }> {
     return await this.movieService
-      .reserveTimeSlot(movieId, timeSlotId, numberOfPeople)
+      .reserveTimeSlot(movieId, timeSlotId, request.numberOfPeople)
       .then((result) => {
         return {
           success: result,
@@ -55,8 +57,8 @@ export class MoviesController {
 
   @Get()
   async getMovies(
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
+    @Query('page', ParseIntPipe) page = 1,
+    @Query('limit', ParseIntPipe) limit = 10,
   ): Promise<GetMoviesResponse> {
     limit = limit > 100 ? 100 : limit;
     const response = await this.movieService.getMovies(page, limit);
@@ -68,6 +70,9 @@ export class MoviesController {
       timeSlotsIds: movie.timeSlots.map((timeSlot) => timeSlot.id),
     }));
 
+    if (mappedMovies.length == 0) {
+      throw new NotFoundException('Page index is beyond the limit');
+    }
     return {
       movies: mappedMovies,
       nextPage: response[1],

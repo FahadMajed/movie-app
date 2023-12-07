@@ -1,7 +1,11 @@
+import { IsNotEmpty, IsString } from 'class-validator';
+
 export class CreateUserRequest {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  password?: string;
-  isAnonymous?: boolean;
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }

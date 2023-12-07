@@ -59,7 +59,8 @@ export class MovieService {
 
     if (timeSlot.hasSufficientCapacity(numberOfPeople)) {
       throw new BadRequestException(
-        'Insufficient capacity for the requested number of seats.',
+        'Insufficient capacity for the requested number of seats, remaining: ' +
+          timeSlot.getRemainingCapacity(),
       );
     }
 

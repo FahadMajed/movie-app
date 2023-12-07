@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { UserRepository } from 'src/user/data/user.repository';
 import { CreateUserRequest } from 'src/user/presentation/requests/create_user.request';
 import { User } from '../entities/user.entity';
@@ -14,8 +14,7 @@ export class UserService {
     let user = new User();
     user.email = request.email;
     user.passwordHash = request.password;
-    user.firstName = request.firstName;
-    user.lastName = request.lastName;
+
     user = await this.userRepository.save(user);
     return user;
   }

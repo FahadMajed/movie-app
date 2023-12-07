@@ -16,14 +16,7 @@ export const UserSchema = new EntitySchema<User>({
       type: String,
       nullable: true,
     },
-    firstName: {
-      type: String,
-      nullable: true,
-    },
-    lastName: {
-      type: String,
-      nullable: true,
-    },
+
     passwordHash: {
       type: String,
       nullable: true,

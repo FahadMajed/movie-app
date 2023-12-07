@@ -26,17 +26,17 @@ export class CreateMovieRequest {
 }
 
 class TimeSlotRequest {
+  @Type(() => Date)
   @IsDate({ message: 'startTime must be a valid date' })
   @NoSecondsOrMilliseconds()
-  @Type(() => Date)
   startTime: Date;
 
+  @Type(() => Date)
   @IsDate({ message: 'endTime must be a valid date' })
   @IsLaterThan('startTime', {
     message: 'endTime must be greater than startTime',
   })
   @NoSecondsOrMilliseconds()
-  @Type(() => Date)
   endTime: Date;
 
   @Min(1)
@@ -78,8 +78,8 @@ function IsLaterThan(property: string, validationOptions?: ValidationOptions) {
           const [relatedPropertyName] = args.constraints;
           const relatedValue = (args.object as any)[relatedPropertyName];
           return (
-            typeof value === 'string' &&
-            typeof relatedValue === 'string' &&
+            value instanceof Date &&
+            relatedValue instanceof Date &&
             new Date(value) > new Date(relatedValue)
           );
         },

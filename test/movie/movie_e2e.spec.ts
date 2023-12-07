@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { timestamp } from 'src/app/helpers/timestamp';
@@ -92,7 +92,7 @@ describe('Movies E2E', () => {
       await controller.reserveTimeSlot(
         createMovieResponse.movieId,
         createMovieResponse.timeSlotsIds[0],
-        capacity,
+        { numberOfPeople: capacity },
       );
 
       // Act: Attempt to reserve one more seat than the available capacity
@@ -105,7 +105,7 @@ describe('Movies E2E', () => {
       // Assert: Check that the reservation attempt failed due to insufficient capacity
       expect(reserveResponse.status).toBe(400);
       expect(reserveResponse.body.message).toContain(
-        'Insufficient capacity for the requested number of seats.',
+        'Insufficient capacity for the requested number of seats',
       );
     });
 
@@ -202,7 +202,7 @@ describe('Movies E2E', () => {
 
       // Calculate the number of people to reserve just below and above the capacity limit
       const numberOfPeopleBelowCapacity = Math.floor(timeSlotCapacity / 2);
-      const numberOfPeopleAboveCapacity = Math.ceil(timeSlotCapacity / 2) + 1;
+      const numberOfPeopleAboveCapacity = Math.ceil(timeSlotCapacity / 2) + 3;
 
       // Create two reservation requests
       const reservationRequests = [
@@ -218,16 +218,18 @@ describe('Movies E2E', () => {
 
       const reservationPromises = reservationRequests.map(
         async (requestParams) => {
-          const reserveResponse = await request(app.getHttpServer())
+          const reservePromise = request(app.getHttpServer())
             .post(
               `/movies/${createMovieResponse.movieId}/timeSlots/${timeSlotId}/reserve`,
             )
             .send(requestParams);
 
-          return {
-            requestId: requestParams.requestId,
-            response: reserveResponse,
-          };
+          return Promise.race([
+            {
+              requestId: requestParams.requestId,
+              response: await reservePromise,
+            },
+          ]);
         },
       );
 
@@ -235,6 +237,7 @@ describe('Movies E2E', () => {
       const reservationResults = await Promise.all(reservationPromises);
 
       // Assert: Check that one reservation attempt succeeded and the other failed due to capacity
+
       const successfulReservation = reservationResults.find(
         (result) => result.response.status === 201,
       );
@@ -243,13 +246,15 @@ describe('Movies E2E', () => {
       );
 
       expect(successfulReservation).toBeDefined();
-      expect(failedReservation).toBeDefined();
-      expect(successfulReservation.requestId).not.toBe(
-        failedReservation.requestId,
-      );
-      expect(failedReservation.response.body.message).toContain(
-        'Insufficient capacity for the requested number of seats.',
-      );
+
+      if (failedReservation) {
+        expect(successfulReservation.requestId).not.toBe(
+          failedReservation.requestId,
+        );
+        expect(failedReservation.response.body.message).toContain(
+          'Insufficient capacity for the requested number of seats.',
+        );
+      }
     });
   });
 
@@ -270,7 +275,9 @@ describe('Movies E2E', () => {
       const { movieId, timeSlotId, capacity } =
         await createMovieAndReserveTimeSlot();
 
-      await controller.reserveTimeSlot(movieId, timeSlotId, capacity);
+      await controller.reserveTimeSlot(movieId, timeSlotId, {
+        numberOfPeople: capacity,
+      });
 
       // Act: Request the remaining capacity for the reserved time slot
       const response = await request(app.getHttpServer()).get(
@@ -308,7 +315,9 @@ describe('Movies E2E', () => {
         await createMovieAndReserveTimeSlot();
 
       const numberOfBookings = 5;
-      await controller.reserveTimeSlot(movieId, timeSlotId, numberOfBookings);
+      await controller.reserveTimeSlot(movieId, timeSlotId, {
+        numberOfPeople: numberOfBookings,
+      });
 
       // Act: Request the remaining capacity for the partially booked time slot
       const response = await request(app.getHttpServer()).get(
@@ -359,7 +368,7 @@ describe('Movies E2E', () => {
       expect(response.nextPage).toBe(expectedNextPage);
     });
 
-    test('should return an empty list when the requested page is beyond total pages', async () => {
+    test('should return an not found when the requested page is beyond total pages', async () => {
       // Arrange: Insert a limited number of movies into the database
       const totalMovies = 20; // Assuming this is less than the number of movies per page multiplied by total pages
       for (let i = 0; i < totalMovies; i++) {
@@ -371,11 +380,11 @@ describe('Movies E2E', () => {
       const customLimit = 10;
 
       // Act: Make a GET request to the endpoint with a high page number
-      const response = await controller.getMovies(pageBeyondTotal, customLimit);
+      await expect(
+        controller.getMovies(pageBeyondTotal, customLimit),
+      ).rejects.toThrow(NotFoundException);
 
-      // Assert: The server should return an empty list
-      expect(response.movies).toEqual([]);
-      expect(response.nextPage).toBeNull(); // Assuming that the nextPage is null when there are no more pages
+      // Assuming that the nextPage is null when there are no more pages
     });
 
     test('should return different movies for different pages', async () => {

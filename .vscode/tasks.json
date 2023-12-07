@@ -7,7 +7,18 @@
             "command": "npm",
             "args": ["run", "build"],
             "problemMatcher": []
-        }
+        },
+
+        {
+            "label": "Run Jest Tests",
+            "type": "shell",
+            "command": "npm",
+            "args": ["test"],
+            "group": {
+              "kind": "test",
+              "isDefault": true
+            }
+          }
     
 	]
 }

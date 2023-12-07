@@ -24,10 +24,7 @@ async function bootstrap() {
           .flatMap((error) => getConstraints(error))
           .flat();
 
-        return new BadRequestException({
-          message:
-            errorMessages.length > 0 ? errorMessages : ['Validation failed'],
-        });
+        return new BadRequestException(errorMessages.join(', '));
       },
     }),
   );
