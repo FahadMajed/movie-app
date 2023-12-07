@@ -194,5 +194,66 @@ describe('MoviesController E2E', () => {
 
       expect(reservedTimeSlot.bookedCount).toBe(totalReservedSeats);
     });
+
+    test('should handle overlapping concurrent reservation attempts', async () => {
+      // Arrange: Create a valid movie to have a valid movie ID
+      const movie = movieFactory();
+      const createMovieResponse = await controller.createMovie(movie);
+
+      // Get the time slot ID and capacity of the first time slot
+      const timeSlotId = createMovieResponse.timeSlotsIds[0];
+      const timeSlotCapacity = movie.timeSlots[0].capacity;
+
+      // Calculate the number of people to reserve just below and above the capacity limit
+      const numberOfPeopleBelowCapacity = Math.floor(timeSlotCapacity / 2);
+      const numberOfPeopleAboveCapacity = Math.ceil(timeSlotCapacity / 2) + 1;
+
+      // Create two reservation requests
+      const reservationRequests = [
+        {
+          numberOfPeople: numberOfPeopleBelowCapacity,
+          requestId: 'request1', // Unique identifier for request 1
+        },
+        {
+          numberOfPeople: numberOfPeopleAboveCapacity,
+          requestId: 'request2', // Unique identifier for request 2
+        },
+      ];
+
+      const reservationPromises = reservationRequests.map(
+        async (requestParams) => {
+          const reserveResponse = await request(app.getHttpServer())
+            .post(
+              `/movies/${createMovieResponse.movieId}/timeSlots/${timeSlotId}/reserve`,
+            )
+            .send(requestParams);
+
+          return {
+            requestId: requestParams.requestId,
+            response: reserveResponse,
+          };
+        },
+      );
+
+      // Act: Simultaneously attempt overlapping reservations
+      const reservationResults = await Promise.all(reservationPromises);
+
+      // Assert: Check that one reservation attempt succeeded and the other failed due to capacity
+      const successfulReservation = reservationResults.find(
+        (result) => result.response.status === 201,
+      );
+      const failedReservation = reservationResults.find(
+        (result) => result.response.status === 400,
+      );
+
+      expect(successfulReservation).toBeDefined();
+      expect(failedReservation).toBeDefined();
+      expect(successfulReservation.requestId).not.toBe(
+        failedReservation.requestId,
+      );
+      expect(failedReservation.response.body.message).toContain(
+        'Insufficient capacity for the requested number of seats.',
+      );
+    });
   });
 });
