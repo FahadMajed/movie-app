@@ -1,6 +1,6 @@
 ## Ensuring Data Integrity in a Movie Reservation System
 
-In the context of a Movie Reservation System, maintaining data integrity is crucial for ensuring accurate and consistent movie reservations. This system is designed to handle potential data inconsistencies, which can lead to issues like overbooking or conflicting reservations.
+Maintaining data integrity is crucial for ensuring accurate and consistent movie reservations. This system is designed to handle potential data inconsistencies, which can lead to issues like overbooking or conflicting reservations.
 
 ### Strategies for Maintaining Data Integrity
 
