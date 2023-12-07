@@ -119,6 +119,27 @@ describe('MoviesController E2E', () => {
       );
     });
 
-    // Add more test cases as needed
+    test('should fail to reserve a time slot due to invalid time slot ID', async () => {
+      // Arrange: Create a valid movie to have a valid movie ID
+      const movie = movieFactory();
+      const createMovieResponse = await controller.createMovie(movie);
+
+      // Use a non-existent or invalid time slot ID (e.g., 999)
+      const invalidTimeSlotId = 999;
+      const numberOfPeople = 2; // Ensure there are enough seats
+
+      // Act: Attempt to reserve a time slot with the invalid time slot ID
+      const reserveResponse = await request(app.getHttpServer())
+        .post(
+          `/movies/${createMovieResponse.movieId}/timeSlots/${invalidTimeSlotId}/reserve`,
+        )
+        .send({ numberOfPeople: numberOfPeople });
+
+      // Assert: Check that the reservation attempt failed due to the invalid time slot ID
+      expect(reserveResponse.status).toBe(404);
+      expect(reserveResponse.body.message).toContain(
+        `Time slot with ID ${invalidTimeSlotId} not found in movie ${movie.title}.`,
+      );
+    });
   });
 });
